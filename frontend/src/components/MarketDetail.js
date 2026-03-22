@@ -40,6 +40,7 @@ export default function MarketDetail({ event, auth, onPlaceOrder, onSell, onClos
   const [showAll, setShowAll] = useState(false);
   const [aiRecommendation, setAiRecommendation] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [realtimePrice, setRealtimePrice] = useState(null); // { ticker: price }
 
   const selectedMarket = markets.find((m) => m.ticker === selectedTicker) || markets[0];
 
@@ -83,9 +84,40 @@ export default function MarketDetail({ event, auth, onPlaceOrder, onSell, onClos
   useEffect(() => {
     setLoading(true);
     fetchCandles();
-    const timer = setInterval(fetchCandles, 5000); // 5s refresh for live feel
+    const timer = setInterval(fetchCandles, 5000); // 5s refresh for buckets
     return () => clearInterval(timer);
   }, [fetchCandles]);
+
+  // Real-time price polling for current selection
+  useEffect(() => {
+    if (!selectedTicker) return;
+    
+    const fetchRealtime = async () => {
+      try {
+        const res = await fetch(`/api/bot/status`); // Or use getMarketOrderbook
+        // Actually, just fetch the market directly for bid/ask
+        const res2 = await fetch(`/trade-api/v2/markets/${selectedTicker}`);
+        if (res2.ok) {
+           const data = await res2.json();
+           const m = data.market;
+           let p = parseFloat(m.yes_ask_dollars || 0);
+           const bid = parseFloat(m.yes_bid_dollars || 0);
+           if (p > 0 && bid > 0) p = (p + bid) / 2;
+           else if (!p) p = bid;
+           
+           if (p > 0) {
+             setRealtimePrice(prev => ({ ...prev, [selectedTicker]: p }));
+           }
+        }
+      } catch (e) {
+        console.error('Realtime fetch failed', e);
+      }
+    };
+
+    fetchRealtime();
+    const timer = setInterval(fetchRealtime, 2000); // 2s polling for ticks
+    return () => clearInterval(timer);
+  }, [selectedTicker]);
 
   // Fetch AI recommendation when ticker changes or candle data updates
   useEffect(() => {
@@ -134,11 +166,26 @@ export default function MarketDetail({ event, auth, onPlaceOrder, onSell, onClos
   const chartDatasets = sortedMarkets
     .filter(m => candleData[m.ticker] && candleData[m.ticker].length >= 2)
     .slice(0, 5) // max 5 lines on chart
-    .map(m => ({
-      label: m.yes_sub_title || m.title || m.ticker,
-      color: marketColors[m.ticker],
-      candles: candleData[m.ticker],
-    }));
+    .map(m => {
+      const candles = [...(candleData[m.ticker] || [])];
+      // Append real-time point if available
+      if (realtimePrice && realtimePrice[m.ticker]) {
+        const lastCandle = candles[candles.length - 1];
+        const nowTs = Math.floor(Date.now() / 1000);
+        if (lastCandle && nowTs > lastCandle.end_period_ts) {
+          candles.push({
+            end_period_ts: nowTs,
+            yes_ask: { close_dollars: realtimePrice[m.ticker].toFixed(4) },
+            yes_bid: { close_dollars: realtimePrice[m.ticker].toFixed(4) }
+          });
+        }
+      }
+      return {
+        label: m.yes_sub_title || m.title || m.ticker,
+        color: marketColors[m.ticker],
+        candles: candles,
+      };
+    });
 
   return (
     <div className="market-detail">

@@ -9,6 +9,7 @@ export default function TradingBot() {
   const [modeInput, setModeInput] = useState('');
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('logs'); // 'logs', 'portfolio', 'history'
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const fetchStatus = async () => {
     try {
@@ -88,7 +89,7 @@ export default function TradingBot() {
   };
 
   const handleReset = async () => {
-    if (!window.confirm('Are you sure you want to reset the simulation? This will clear your history and restore balance to $1000.')) return;
+    setShowResetModal(false);
     try {
       await fetch('/api/bot/reset', { method: 'POST' });
       fetchStatus();
@@ -128,7 +129,7 @@ export default function TradingBot() {
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
              <button 
-              onClick={handleReset}
+              onClick={() => setShowResetModal(true)}
               style={{
                 background: 'rgba(255,255,255,0.05)',
                 color: '#94a3b8',
@@ -402,6 +403,64 @@ export default function TradingBot() {
           </div>
         </div>
       </div>
+      {/* Reset Confirmation Modal */}
+      {showResetModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: '#1e293b',
+            padding: '32px',
+            borderRadius: '16px',
+            maxWidth: '400px',
+            border: '1px solid rgba(255,255,255,0.1)',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)'
+          }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '20px' }}>Reset Simulation?</h3>
+            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5', marginBottom: '24px' }}>
+              This will clear your paper trading history and reset your balance to **$1,000.00**. This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => setShowResetModal(false)}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'white',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleReset}
+                style={{
+                  flex: 1,
+                  background: '#ef4444',
+                  border: 'none',
+                  color: 'white',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Yes, Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -194,6 +194,11 @@ export async function getMarket(ticker) {
   return data.market;
 }
 
+export async function getMarketOrderbook(ticker) {
+  const data = await request('GET', `/markets/${ticker}/orderbook`);
+  return data.orderbook;
+}
+
 // ─── Candlesticks (public) ──────────────────────────────────────────────────────
 
 export async function getCandlesticks(ticker, { startTs, endTs, periodInterval = 1 } = {}) {
@@ -249,9 +254,11 @@ export async function getCandlesticksWithFallback(ticker, seconds, interval) {
 
   // Fallback: try progressively larger windows
   const fallbacks = [
-    { seconds: 7 * 86400, interval: 3600 },      // 7 days, 1h intervals
-    { seconds: 30 * 86400, interval: 14400 },     // 30 days, 4h intervals
-    { seconds: 90 * 86400, interval: 86400 },     // 90 days, daily intervals
+    { seconds: 6 * 3600, interval: 5 },          // 6 hours, 5m intervals
+    { seconds: 24 * 3600, interval: 15 },         // 24 hours, 15m intervals
+    { seconds: 7 * 86400, interval: 60 },         // 7 days, 1h intervals
+    { seconds: 30 * 86400, interval: 240 },        // 30 days, 4h intervals
+    { seconds: 90 * 86400, interval: 1440 },       // 90 days, daily intervals
   ];
 
   for (const fb of fallbacks) {

@@ -53,13 +53,13 @@ export default function MultiLineChart({ datasets = [], width = 700, height = 28
   const rangeP = 1;
 
   // Add right padding for labels, bottom for time axis, left for percent labels
-  const rightPad = 120;
-  const bottomPad = 24;
-  const leftPad = 40;
-  const topPad = 16;
+  const rightPad = 100;
+  const bottomPad = 32;
+  const leftPad = 12;
+  const topPad = 24;
   
-  const toX = (t) => leftPad + ((t - minT) / rangeT) * plotW;
-  const toY = (p) => topPad + (1 - (p - minP) / rangeP) * plotH;
+  const toX = (t) => leftPad + ((t - minT) / rangeT) * (plotW - rightPad - leftPad);
+  const toY = (p) => topPad + (1 - (p - minP) / rangeP) * (plotH - topPad - bottomPad);
 
   // Generate X-axis labels (time)
   const xLabels = [];
@@ -92,15 +92,22 @@ export default function MultiLineChart({ datasets = [], width = 700, height = 28
     <svg className="price-chart" width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
 
       {/* Horizontal Grid Lines */}
-      {yLabels.map((yl, i) => (
+      {[0, 0.25, 0.5, 0.75, 1.0].map((p, i) => (
         <g key={`grid-y-${i}`}>
           <line
-            x1={leftPad} y1={yl.y}
-            x2={width - rightPad} y2={yl.y}
-            stroke="#222"
-            strokeDasharray="4,4"
+            x1={leftPad} y1={toY(p)}
+            x2={width - rightPad} y2={toY(p)}
+            stroke="rgba(255,255,255,0.05)"
             strokeWidth="1"
           />
+          <text 
+            x={width - rightPad + 10} 
+            y={toY(p) + 4} 
+            fill="#475569" 
+            fontSize="10px"
+          >
+            {Math.round(p * 100)}%
+          </text>
         </g>
       ))}
 
@@ -114,6 +121,17 @@ export default function MultiLineChart({ datasets = [], width = 700, height = 28
           let val = parseFloat(p.close_dollars || p.mean_dollars || 0);
           if (!val && p.close_cents !== undefined) val = p.close_cents / 100;
           if (!val && p.close !== undefined) val = p.close > 1 ? p.close / 100 : p.close;
+          
+          // Fallback to yes_ask/yes_bid if no trade price (common in v2 candlesticks)
+          if (!val) {
+            const ask = c.yes_ask || {};
+            const bid = c.yes_bid || {};
+            const askP = parseFloat(ask.close_dollars || ask.close || 0);
+            const bidP = parseFloat(bid.close_dollars || bid.close || 0);
+            if (askP > 0 && bidP > 0) val = (askP + bidP) / 2;
+            else if (askP > 0) val = askP;
+            else if (bidP > 0) val = bidP;
+          }
           return val || 0;
         });
         const times = candles.map(c => c.end_period_ts || 0);
@@ -166,6 +184,7 @@ export default function MultiLineChart({ datasets = [], width = 700, height = 28
               strokeWidth="2.5"
               strokeLinejoin="round"
               strokeLinecap="round"
+              style={{ filter: di === 0 ? 'drop-shadow(0 0 4px rgba(0,0,0,0.5))' : 'none' }}
             />
 
             {/* Current price dot */}
@@ -198,36 +217,23 @@ export default function MultiLineChart({ datasets = [], width = 700, height = 28
               y={lastPt.y - 4}
               fill={color}
               fontSize="12px"
-              fontWeight="500"
-              fontFamily="sans-serif"
+              fontWeight="600"
+              fontFamily="Inter, sans-serif"
             >
               <tspan x={lastPt.x + 8} dy="0">{label.split(' ')[0]}</tspan>
-              <tspan x={lastPt.x + 8} dy="16" fontSize="16px" fontWeight="700">{Math.round(lastPrice * 100)}%</tspan>
+              <tspan x={lastPt.x + 8} dy="16" fontSize="18px" fontWeight="800">{Math.round(lastPrice * 100)}%</tspan>
             </text>
         );
       })}
 
-      {/* Axis Labels (rendered last to stay on top) */}
-      {yLabels.map((yl, i) => (
-        <text
-          key={`y-axis-${i}`}
-          x={width - rightPad + 8}
-          y={yl.y + 4} // vertical center adjustment
-          fill="#666"
-          fontSize="11px"
-          fontFamily="sans-serif"
-        >
-          {yl.label}
-        </text>
-      ))}
 
       {xLabels.map((xl, i) => (
         <text
           key={`x-axis-${i}`}
           x={xl.x}
-          y={height - 5}
-          fill="#666"
-          fontSize="11px"
+          y={height - 10}
+          fill="#475569"
+          fontSize="10px"
           fontFamily="sans-serif"
           textAnchor={i === 0 ? 'start' : i === xLabels.length - 1 ? 'end' : 'middle'}
         >
@@ -250,6 +256,17 @@ export function Sparkline({ candles = [], width = 100, height = 32 }) {
     let val = parseFloat(p.close_dollars || p.mean_dollars || 0);
     if (!val && p.close_cents !== undefined) val = p.close_cents / 100;
     if (!val && p.close !== undefined) val = p.close > 1 ? p.close / 100 : p.close;
+    
+    // Fallback to yes_ask/yes_bid
+    if (!val) {
+      const ask = c.yes_ask || {};
+      const bid = c.yes_bid || {};
+      const askP = parseFloat(ask.close_dollars || ask.close || 0);
+      const bidP = parseFloat(bid.close_dollars || bid.close || 0);
+      if (askP > 0 && bidP > 0) val = (askP + bidP) / 2;
+      else if (askP > 0) val = askP;
+      else if (bidP > 0) val = bidP;
+    }
     return val || 0;
   });
   const min = Math.min(...prices);
