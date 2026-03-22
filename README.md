@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AI Dual-Regime Rebound Trading System
 
 A machine-learning-optimized sports betting bot for Kalshi prediction markets that identifies and exploits temporary probability mispricings using two complementary strategies.
@@ -80,3 +81,6 @@ The ML system learns optimal parameters for entry zones, OP/S thresholds, exit m
 - **Circuit breaker** halts trading if daily loss limit is hit
 - **Position limits** prevent over-exposure
 - Live trading requires typing `YES` at the confirmation prompt
+=======
+# SportsBettingBot
+>>>>>>> 5bad84720d8d057742ce08e70baaf9a22fc9f555
