@@ -1,0 +1,65 @@
+# ============================================================
+# AI Dual-Regime Rebound Trading System — Configuration
+# ============================================================
+
+kalshi:
+  # REST API
+  base_url: "https://api.elections.kalshi.com/trade-api/v2"
+  # WebSocket
+  ws_url: "wss://api.elections.kalshi.com/trade-api/ws/v2"
+  # Auth — set via environment variables or fill in here
+  api_key: "${KALSHI_API_KEY}"
+  private_key_path: "${KALSHI_PRIVATE_KEY_PATH}"
+  # Rate limiting
+  requests_per_second: 10
+
+trading:
+  # SAFETY: must be explicitly set to false for live trading
+  dry_run: true
+  # Sports to track
+  sports:
+    - "NCAAB"   # college basketball
+    - "ATP"     # ATP tennis
+  # Position sizing
+  default_stake_usd: 1.00
+  max_stake_usd: 10.00
+  # Portfolio limits
+  max_concurrent_positions: 10
+  daily_loss_limit_usd: 50.00
+  max_loss_per_trade_usd: 10.00
+
+# Default parameter ranges (overridden by ML models at runtime)
+non_cross:
+  entry_prob_low: 0.01
+  entry_prob_high: 0.05
+  op_threshold: 5.0
+  exit_multiplier: 6.0
+  min_time_remaining_frac: 0.20
+
+cross:
+  start_prob_low: 0.60
+  start_prob_high: 1.00
+  collapse_prob_low: 0.03
+  collapse_prob_high: 0.20
+  s_threshold: 4.0
+  exit_multiplier: 10.0
+  exit_strategy: "multiplier"   # "full_hold" | "multiplier" | "dynamic"
+  min_time_remaining_frac: 0.20
+
+ml:
+  models_dir: "src/ml/models"
+  regime_classifier: "regime_classifier.joblib"
+  non_cross_model: "non_cross_params.joblib"
+  cross_model: "cross_params.joblib"
+  # Training
+  train_test_split: [0.70, 0.15, 0.15]
+  synthetic_samples: 10000
+
+storage:
+  db_path: "data/trading.db"
+
+logging:
+  level: "INFO"
+  log_file: "data/trading.log"
+  max_bytes: 10485760   # 10 MB
+  backup_count: 5

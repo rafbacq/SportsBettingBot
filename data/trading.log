@@ -1,0 +1,98 @@
+2026-03-22 03:07:15 | INFO     | trading.trainer           | ============================================================
+2026-03-22 03:07:15 | INFO     | trading.trainer           | STARTING ML TRAINING PIPELINE
+2026-03-22 03:07:15 | INFO     | trading.trainer           | ============================================================
+2026-03-22 03:07:15 | INFO     | trading.trainer           | Generating 500 synthetic games...
+2026-03-22 03:07:15 | INFO     | trading.dataset           | Generated 500 synthetic games
+2026-03-22 03:07:15 | INFO     | trading.trainer           | Processing 500 games...
+2026-03-22 03:07:17 | INFO     | trading.dataset           | Built dataset: 13626 samples from 500 games | rebounds: 6624 (48.6%)
+2026-03-22 03:07:17 | INFO     | trading.dataset           | Split: train=9536 (196 games), val=1893 (42 games), test=2197 (42 games)
+2026-03-22 03:07:17 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-22 03:07:17 | INFO     | trading.trainer           | Training Regime Classifier...
+2026-03-22 03:07:17 | INFO     | trading.regime_classifier | Training regime classifier: 9536 train, 1893 val | Cross rate: 34.7% (train), 43.0% (val)
+2026-03-22 03:07:17 | INFO     | trading.regime_classifier | Regime classifier results: accuracy=0.936, precision=0.982, recall=0.866, f1=0.920
+2026-03-22 03:07:17 | INFO     | trading.regime_classifier | Top features: prob_change_pct=0.404, s_value=0.232, op_value=0.211, game_phase=0.049, prob_a_initial=0.011
+2026-03-22 03:07:17 | INFO     | trading.regime_classifier | Regime classifier saved to src/ml/models/regime_classifier.joblib
+2026-03-22 03:07:17 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-22 03:07:17 | INFO     | trading.trainer           | Training Non-Cross Parameter Optimizer...
+2026-03-22 03:07:18 | INFO     | trading.param_optimizer   | Non-Cross rebound accuracy: 0.678
+2026-03-22 03:07:18 | INFO     | trading.param_optimizer   | Non-Cross multiplier RMSE: 4.489
+2026-03-22 03:07:18 | INFO     | trading.param_optimizer   | Non-Cross model saved to src/ml/models/non_cross_params.joblib
+2026-03-22 03:07:18 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-22 03:07:18 | INFO     | trading.trainer           | Training Cross Parameter Optimizer...
+2026-03-22 03:07:18 | INFO     | trading.param_optimizer   | Cross recovery accuracy: 0.784
+2026-03-22 03:07:18 | INFO     | trading.param_optimizer   | Cross multiplier RMSE: 5.833
+2026-03-22 03:07:19 | INFO     | trading.param_optimizer   | Cross model saved to src/ml/models/cross_params.joblib
+2026-03-22 03:07:19 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-22 03:07:19 | INFO     | trading.trainer           | Evaluating on test set...
+2026-03-22 03:07:19 | INFO     | trading.trainer           | Test set: regime_accuracy=0.989, avg_EV=1.984
+2026-03-22 03:07:19 | INFO     | trading.trainer           | ============================================================
+2026-03-22 03:07:19 | INFO     | trading.trainer           | TRAINING COMPLETE in 3.4s
+2026-03-22 03:07:19 | INFO     | trading.trainer           | ============================================================
+2026-03-22 03:07:19 | INFO     | trading.storage           | Database initialized at data/trading.db
+2026-03-22 03:07:19 | INFO     | trading.storage           | Database connection closed
+2026-03-22 06:00:00 | INFO     | trading.api               | Starting up API server and loading models...
+2026-03-22 06:00:47 | INFO     | trading.api               | Starting up API server and loading models...
+2026-03-22 06:05:25 | ERROR    | trading.api               | Error getting recommendations: 'KalshiClient' object has no attribute 'get_candlesticks'
+2026-03-22 06:05:25 | ERROR    | trading.api               | Error getting recommendations: 'KalshiClient' object has no attribute 'get_candlesticks'
+2026-03-22 06:05:59 | ERROR    | trading.api               | Error getting recommendations: 'KalshiClient' object has no attribute 'get_candlesticks'
+2026-03-22 06:05:59 | ERROR    | trading.api               | Error getting recommendations: 'KalshiClient' object has no attribute 'get_candlesticks'
+2026-03-22 06:10:53 | ERROR    | trading.api               | Error getting recommendations: 'KalshiClient' object has no attribute 'get_candlesticks'
+2026-03-22 06:10:53 | ERROR    | trading.api               | Error getting recommendations: 'KalshiClient' object has no attribute 'get_candlesticks'
+2026-03-22 06:15:25 | ERROR    | trading.api               | Error getting recommendations: 'KalshiClient' object has no attribute 'get_candlesticks'
+2026-03-22 06:19:20 | INFO     | trading.api               | Starting up API server and loading models...
+2026-03-22 06:20:07 | ERROR    | trading.kalshi_client     | GET /markets/KXTEAMSINNBAF-26-PORTOR/candlesticks failed: 404 Client Error: Not Found for url: https://api.elections.kalshi.com/trade-api/v2/markets/KXTEAMSINNBAF-26-PORTOR/candlesticks?period_interval=1&series_ticker=KXTEAMSINNBAF&start_ts=1774168807&end_ts=1774174807
+2026-03-22 06:20:07 | ERROR    | trading.kalshi_client     | GET /markets/KXTEAMSINNBAF-26-PORTOR/candlesticks failed: 404 Client Error: Not Found for url: https://api.elections.kalshi.com/trade-api/v2/markets/KXTEAMSINNBAF-26-PORTOR/candlesticks?period_interval=1&series_ticker=KXTEAMSINNBAF&start_ts=1774168807&end_ts=1774174807
+2026-03-22 06:20:49 | ERROR    | trading.kalshi_client     | GET /markets/KXTEAMSINNBAF-26-PORTOR/candlesticks failed: 404 Client Error: Not Found for url: https://api.elections.kalshi.com/trade-api/v2/markets/KXTEAMSINNBAF-26-PORTOR/candlesticks?period_interval=1&series_ticker=KXTEAMSINNBAF&start_ts=1774168849&end_ts=1774174849
+2026-03-22 06:20:49 | ERROR    | trading.kalshi_client     | GET /markets/KXTEAMSINNBAF-26-PORTOR/candlesticks failed: 404 Client Error: Not Found for url: https://api.elections.kalshi.com/trade-api/v2/markets/KXTEAMSINNBAF-26-PORTOR/candlesticks?period_interval=1&series_ticker=KXTEAMSINNBAF&start_ts=1774168849&end_ts=1774174849
+2026-03-22 06:20:57 | ERROR    | trading.kalshi_client     | GET /markets/KXWCSQUAD-26BRA-HSOU/candlesticks failed: 404 Client Error: Not Found for url: https://api.elections.kalshi.com/trade-api/v2/markets/KXWCSQUAD-26BRA-HSOU/candlesticks?period_interval=1&series_ticker=KXWCSQUAD&start_ts=1774168857&end_ts=1774174857
+2026-03-22 06:20:58 | ERROR    | trading.kalshi_client     | GET /markets/KXWCSQUAD-26BRA-HSOU/candlesticks failed: 404 Client Error: Not Found for url: https://api.elections.kalshi.com/trade-api/v2/markets/KXWCSQUAD-26BRA-HSOU/candlesticks?period_interval=1&series_ticker=KXWCSQUAD&start_ts=1774168857&end_ts=1774174857
+2026-03-22 06:22:33 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:22:38 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:22:43 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:22:49 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:22:54 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:22:59 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:23:04 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:23:09 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:23:14 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:23:19 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:23:25 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:23:30 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:23:35 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:23:40 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:23:45 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:23:51 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:23:56 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:01 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:06 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:11 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:16 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:22 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:27 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:32 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:37 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:42 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:47 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:53 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:24:58 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:25:03 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:25:08 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:25:13 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:25:18 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:25:24 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:25:29 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:25:34 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:25:40 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:25:45 | ERROR    | trading.api               | Bot loop error: invalid literal for int() with base 10: '0.0000'
+2026-03-22 06:44:24 | INFO     | trading.api               | Starting up API server and loading models...
+2026-03-22 06:45:29 | ERROR    | trading.kalshi_client     | GET /portfolio/balance failed: 401 Client Error: Unauthorized for url: https://api.elections.kalshi.com/trade-api/v2/portfolio/balance
+2026-03-22 06:45:29 | ERROR    | trading.kalshi_client     | GET /portfolio/positions failed: 401 Client Error: Unauthorized for url: https://api.elections.kalshi.com/trade-api/v2/portfolio/positions
+2026-03-22 06:45:37 | ERROR    | trading.kalshi_client     | GET /portfolio/balance failed: 401 Client Error: Unauthorized for url: https://api.elections.kalshi.com/trade-api/v2/portfolio/balance
+2026-03-22 06:45:37 | ERROR    | trading.kalshi_client     | GET /portfolio/positions failed: 401 Client Error: Unauthorized for url: https://api.elections.kalshi.com/trade-api/v2/portfolio/positions
+2026-03-22 06:45:50 | ERROR    | trading.kalshi_client     | GET /portfolio/balance failed: 401 Client Error: Unauthorized for url: https://api.elections.kalshi.com/trade-api/v2/portfolio/balance
+2026-03-22 06:45:50 | ERROR    | trading.kalshi_client     | GET /portfolio/positions failed: 401 Client Error: Unauthorized for url: https://api.elections.kalshi.com/trade-api/v2/portfolio/positions
+2026-03-22 06:50:05 | INFO     | trading.api               | Starting up API server and loading models...
+2026-03-22 07:08:16 | INFO     | trading.api               | Starting up API server and loading models...
+2026-03-22 07:10:51 | INFO     | trading.api               | Starting up API server and loading models...
+2026-03-22 07:12:00 | INFO     | trading.api               | Starting up API server and loading models...
+2026-03-22 07:21:13 | INFO     | trading.api               | Starting up API server and loading models...
