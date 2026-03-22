@@ -111,7 +111,10 @@ export default function MultiLineChart({ datasets = [], width = 700, height = 28
 
         const prices = candles.map(c => {
           const p = c.price || c;
-          return parseFloat(p.close_dollars || p.mean_dollars || p.close || 0);
+          let val = parseFloat(p.close_dollars || p.mean_dollars || 0);
+          if (!val && p.close_cents !== undefined) val = p.close_cents / 100;
+          if (!val && p.close !== undefined) val = p.close > 1 ? p.close / 100 : p.close;
+          return val || 0;
         });
         const times = candles.map(c => c.end_period_ts || 0);
 
@@ -121,12 +124,9 @@ export default function MultiLineChart({ datasets = [], width = 700, height = 28
         }));
 
         // Kalshi step line: horizontal then vertical (L x[i], y[i-1] L x[i], y[i])
-        // Wait, the prompt says change from step-line to smooth curves, but Kalshi's screenshot IS a step-line.
-        // Looking at the second screenshot (LIV Golf), it is a jagged line, but *direct* point-to-point (standard line chart), NOT a step-line.
-        // Let's use direct point-to-point.
         let linePath = `M${points[0].x},${points[0].y}`;
         for (let i = 1; i < points.length; i++) {
-          linePath += ` L${points[i].x},${points[i].y}`;
+          linePath += ` L${points[i].x},${points[i - 1].y} L${points[i].x},${points[i].y}`;
         }
         
         const lastPt = points[points.length - 1];
@@ -247,17 +247,26 @@ export function Sparkline({ candles = [], width = 100, height = 32 }) {
 
   const prices = candles.map((c) => {
     const p = c.price || c;
-    return parseFloat(p.close_dollars || p.mean_dollars || p.close || 0);
+    let val = parseFloat(p.close_dollars || p.mean_dollars || 0);
+    if (!val && p.close_cents !== undefined) val = p.close_cents / 100;
+    if (!val && p.close !== undefined) val = p.close > 1 ? p.close / 100 : p.close;
+    return val || 0;
   });
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   const range = max - min || 0.01;
 
-  const points = prices.map((p, i) => {
-    const x = (i / (prices.length - 1)) * width;
-    const y = (1 - (p - min) / range) * height;
-    return `${x},${y}`;
-  });
+  const points = [];
+  if (prices.length > 0) {
+    points.push(`0,${(1 - (prices[0] - min) / range) * height}`);
+    for (let i = 1; i < prices.length; i++) {
+      const prevY = (1 - (prices[i - 1] - min) / range) * height;
+      const x = (i / (prices.length - 1)) * width;
+      const y = (1 - (prices[i] - min) / range) * height;
+      points.push(`${x},${prevY}`);
+      points.push(`${x},${y}`);
+    }
+  }
 
   const last = prices[prices.length - 1];
   const first = prices[0];

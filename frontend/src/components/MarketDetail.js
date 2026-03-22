@@ -18,11 +18,11 @@ const CHART_COLORS = [
 ];
 
 const PERIOD_OPTIONS = [
-  { label: 'LIVE', seconds: 3600, interval: 60 },
-  { label: '1D', seconds: 86400, interval: 300 },
-  { label: '1W', seconds: 604800, interval: 3600 },
-  { label: '1M', seconds: 2592000, interval: 14400 },
-  { label: 'ALL', seconds: 7776000, interval: 86400 },
+  { label: 'LIVE', seconds: 3600, interval: 1 },
+  { label: '1D', seconds: 86400, interval: 5 },
+  { label: '1W', seconds: 604800, interval: 60 },
+  { label: '1M', seconds: 2592000, interval: 240 },
+  { label: 'ALL', seconds: 7776000, interval: 1440 },
 ];
 
 /**

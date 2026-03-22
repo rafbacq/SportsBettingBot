@@ -196,7 +196,7 @@ export async function getMarket(ticker) {
 
 // ─── Candlesticks (public) ──────────────────────────────────────────────────────
 
-export async function getCandlesticks(ticker, { startTs, endTs, periodInterval = 60 } = {}) {
+export async function getCandlesticks(ticker, { startTs, endTs, periodInterval = 1 } = {}) {
   const now = Math.floor(Date.now() / 1000);
   const data = await request('GET', '/markets/candlesticks', {
     params: {
@@ -214,7 +214,7 @@ export async function getCandlesticks(ticker, { startTs, endTs, periodInterval =
  * Fetch candlesticks for multiple market tickers at once (for multi-line chart).
  * Returns { [ticker]: candles[] }
  */
-export async function getMultiCandlesticks(tickers, { startTs, endTs, periodInterval = 60 } = {}) {
+export async function getMultiCandlesticks(tickers, { startTs, endTs, periodInterval = 1 } = {}) {
   if (!tickers || tickers.length === 0) return {};
   const now = Math.floor(Date.now() / 1000);
   const data = await request('GET', '/markets/candlesticks', {

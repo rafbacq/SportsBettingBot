@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 from logging.handlers import RotatingFileHandler
+from typing import Union
 
 import yaml
 
@@ -20,7 +21,7 @@ def load_config(config_path: str = "config/settings.yaml") -> dict:
     return yaml.safe_load(raw)
 
 
-def setup_logging(config: dict | None = None) -> logging.Logger:
+def setup_logging(config: Union[dict, None] = None) -> logging.Logger:
     """Set up rotating file + console logging. Returns root logger."""
     if config is None:
         config = load_config()

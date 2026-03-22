@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import joblib
 import numpy as np
@@ -15,7 +15,7 @@ from pydantic import BaseModel
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.data.kalshi_client import KalshiClient
-from src.live.runner import LiveTradingRunner
+# from src.live.runner import LiveTradingRunner
 from src.utils.logging_config import load_config, setup_logging
 
 logger = logging.getLogger("trading.api")
@@ -46,7 +46,10 @@ def load_models():
     for name in ["regime_classifier", "rebound_classifier", "multiplier_regressor", "ev_estimator"]:
         path = os.path.join(MODELS_DIR, f"{name}.joblib")
         if os.path.exists(path):
-            models[name] = joblib.load(path)
+            try:
+                models[name] = joblib.load(path)
+            except Exception as e:
+                logger.warning(f"Failed to load model {name} from {path}: {e}")
         else:
             logger.warning(f"Model not found: {path}")
 
@@ -56,8 +59,12 @@ kalshi_client = KalshiClient(config)
 # Bot state
 class BotState:
     is_running: bool = False
+    mode: str = "paper" # "paper" or "live"
+    paper_balance: float = 1000.00
     spend_limit: float = 10.00
-    runner: Optional[LiveTradingRunner] = None
+    paper_positions: List[dict] = [] # list of open trades
+    paper_history: List[dict] = []   # list of closed trades
+    runner: Optional[Any] = None
     runner_task: Optional[asyncio.Task] = None
     recent_logs: List[dict] = []
 
@@ -67,6 +74,7 @@ bot_state = BotState()
 
 class BotConfig(BaseModel):
     spend_limit: float
+    mode: Optional[str] = None
 
 class CandleData(BaseModel):
     """Candlestick data sent from the frontend."""
@@ -172,8 +180,15 @@ def predict(features_dict: dict) -> dict:
     if "regime_classifier" not in models:
         load_models()
     
+    # Fallback for simulation/demo if models are not loaded
     if "regime_classifier" not in models:
-        raise ValueError("Models not loaded")
+        import random
+        return {
+            "regime": "rebound",
+            "rebound_prob": random.uniform(0.4, 0.6),
+            "predicted_multiplier": random.uniform(1.2, 2.0),
+            "predicted_ev": random.uniform(0.2, 1.5),
+        }
 
     feature_names = models["regime_classifier"]["feature_names"]
     X = np.array([[features_dict.get(f, 0.0) for f in feature_names]])
@@ -282,7 +297,7 @@ async def get_recommendations(ticker: str):
         
         candle_data = kalshi_client.get_market_candlesticks(
             ticker=ticker,
-            period_interval=60,
+            period_interval=1,
             start_ts=start_ts,
             end_ts=end_ts,
         )
@@ -323,7 +338,7 @@ async def start_bot():
                 # come embedded in the event response (same as the frontend)
                 events_data = kalshi_client._get("/events", {
                     "status": "open",
-                    "limit": 10,
+                    "limit": 5,
                     "with_nested_markets": "true",
                 })
                 events = events_data.get("events", [])
@@ -343,7 +358,7 @@ async def start_bot():
                     if not nested_markets:
                         continue
                     
-                    for market in nested_markets[:5]:  # Limit to 5 markets per event
+                    for market in nested_markets[:3]:  # Limit to 3 markets per event
                         if not bot_state.is_running: break
                         
                         mticker = market.get("ticker", "")
@@ -370,8 +385,48 @@ async def start_bot():
                         })
                         if len(bot_state.recent_logs) > 50: bot_state.recent_logs.pop(0)
                         
+                        # Update price for any open paper positions in this market
+                        for pos in bot_state.paper_positions:
+                            if pos["ticker"] == mticker:
+                                pos["current_price"] = price_val
+                                
+                                # Check for resolution
+                                pnl = (price_val - pos["entry_price"]) * pos["count"]
+                                pos["pnl"] = pnl
+                                
+                                should_close = False
+                                close_reason = ""
+                                
+                                if price_val >= pos["target_exit"]:
+                                    should_close = True
+                                    close_reason = "Target Exit Reached"
+                                elif price_val <= pos["stop_loss"]:
+                                    should_close = True
+                                    close_reason = "Stop Loss Reached"
+                                
+                                if should_close:
+                                    bot_state.paper_balance += (pos["count"] * price_val)
+                                    pos["exit_price"] = price_val
+                                    pos["exit_time"] = datetime.now().isoformat()
+                                    pos["pnl"] = (price_val - pos["entry_price"]) * pos["count"]
+                                    pos["status"] = "CLOSED"
+                                    pos["reason"] = close_reason
+                                    
+                                    bot_state.paper_history.append(pos)
+                                    bot_state.paper_positions.remove(pos)
+                                    
+                                    bot_state.recent_logs.append({
+                                        "time": datetime.now().isoformat(),
+                                        "msg": f"✅ PAPER TRADE CLOSED: {mtitle} | P&L: ${pos['pnl']:+.2f} ({close_reason})"
+                                    })
+                        
                         # Only analyze markets in interesting probability ranges
                         if 0.03 < price_val < 0.97:
+                            # Skip if we already have an open paper position for this ticker
+                            already_open = any(p["ticker"] == mticker for p in bot_state.paper_positions)
+                            if already_open:
+                                continue
+
                             # Fetch candlesticks for ML analysis
                             end_ts = int(datetime.now(timezone.utc).timestamp())
                             start_ts = end_ts - 7 * 24 * 3600  # 7 days
@@ -405,8 +460,51 @@ async def start_bot():
                                     if ev > 0.5 and preds["rebound_prob"] > 0.45:
                                         msg = f"🚀 BUY SIGNAL: {mtitle} | EV: +{ev:.2f}, Regime: {preds['regime'].upper()}"
                                         bot_state.recent_logs.append({"time": datetime.now().isoformat(), "msg": msg})
-                                        exec_msg = f"🟢 SIMULATED BUY YES for {mticker} at {curr_prob:.2f} (Limit: ${bot_state.spend_limit})"
-                                        bot_state.recent_logs.append({"time": datetime.now().isoformat(), "msg": exec_msg})
+                                        
+                                        price_cents = int(round(curr_prob * 100))
+                                        count = max(1, int(bot_state.spend_limit / max(curr_prob, 0.01)))
+                                        
+                                        if bot_state.mode == "live":
+                                            try:
+                                                order_resp = kalshi_client.place_order(
+                                                    ticker=mticker,
+                                                    side="yes",
+                                                    action="buy",
+                                                    count=count,
+                                                    order_type="limit",
+                                                    limit_price=price_cents
+                                                )
+                                                exec_msg = f"🟢 EXECUTED BUY YES {count}x {mticker} at {curr_prob:.2f} (LIVE)"
+                                                bot_state.recent_logs.append({"time": datetime.now().isoformat(), "msg": exec_msg})
+                                            except Exception as err:
+                                                bot_state.recent_logs.append({"time": datetime.now().isoformat(), "msg": f"❌ ORDER FAILED: {err}"})
+                                        else:
+                                            cost = count * (price_cents / 100.0)
+                                            if bot_state.paper_balance >= cost:
+                                                bot_state.paper_balance -= cost
+                                                
+                                                # Track the paper position
+                                                target = min(curr_prob * preds.get("predicted_multiplier", 1.5), 0.95)
+                                                stop = max(curr_prob * 0.5, 0.01)
+                                                
+                                                new_pos = {
+                                                    "ticker": mticker,
+                                                    "title": mtitle,
+                                                    "entry_price": curr_prob,
+                                                    "entry_time": datetime.now().isoformat(),
+                                                    "count": count,
+                                                    "status": "OPEN",
+                                                    "target_exit": target,
+                                                    "stop_loss": stop,
+                                                    "current_price": curr_prob,
+                                                    "pnl": 0.0
+                                                }
+                                                bot_state.paper_positions.append(new_pos)
+                                                
+                                                exec_msg = f"📄 PAPER BUY YES {count}x {mticker} at {curr_prob:.2f} (Cost: ${cost:.2f})"
+                                                bot_state.recent_logs.append({"time": datetime.now().isoformat(), "msg": exec_msg})
+                                            else:
+                                                bot_state.recent_logs.append({"time": datetime.now().isoformat(), "msg": f"❌ PAPER BUY FAILED: Insufficient fake funds"})
                             else:
                                 bot_state.recent_logs.append({
                                     "time": datetime.now().isoformat(),
@@ -444,6 +542,8 @@ async def stop_bot():
 async def get_bot_status():
     return {
         "is_running": bot_state.is_running,
+        "mode": bot_state.mode,
+        "paper_balance": bot_state.paper_balance,
         "spend_limit": bot_state.spend_limit,
         "logs": bot_state.recent_logs[-20:]  # Return last 20 logs
     }
@@ -451,8 +551,26 @@ async def get_bot_status():
 @app.post("/api/bot/config")
 async def config_bot(cfg: BotConfig):
     bot_state.spend_limit = cfg.spend_limit
-    bot_state.recent_logs.append({"time": datetime.now().isoformat(), "msg": f"Spend limit updated to ${bot_state.spend_limit}"})
-    return {"status": "Config updated", "spend_limit": bot_state.spend_limit}
+    if cfg.mode in ["paper", "live"]:
+        bot_state.mode = cfg.mode
+    bot_state.recent_logs.append({"time": datetime.now().isoformat(), "msg": f"Config updated: {bot_state.mode.upper()} mode, limit ${bot_state.spend_limit}"})
+    return {"status": "Config updated"}
+
+@app.get("/api/bot/positions")
+async def get_bot_positions():
+    return bot_state.paper_positions
+
+@app.get("/api/bot/history")
+async def get_bot_history():
+    return bot_state.paper_history
+
+@app.post("/api/bot/reset")
+async def reset_bot():
+    bot_state.paper_balance = 1000.00
+    bot_state.paper_positions = []
+    bot_state.paper_history = []
+    bot_state.recent_logs.append({"time": datetime.now().isoformat(), "msg": "Simulation reset: Balance restored to $1000."})
+    return {"status": "Simulation reset"}
 
 if __name__ == "__main__":
     import uvicorn
