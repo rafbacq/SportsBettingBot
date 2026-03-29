@@ -161,7 +161,10 @@ class ModelTrainer:
 
         # Regime accuracy on test
         y_true = (test_df["regime"] == "cross").astype(int)
-        X_test = test_df[feature_cols].values
+        X_test = test_df[feature_cols].copy()
+        if "sport" in feature_cols:
+            X_test["sport"] = X_test["sport"].astype("category")
+
         if regime_clf.model is not None:
             y_pred = regime_clf.model.predict(X_test)
             test_acc = float((y_pred == y_true.values).mean())

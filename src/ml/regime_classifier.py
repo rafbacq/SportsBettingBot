@@ -61,8 +61,17 @@ class RegimeClassifier:
         # Encode target: cross=1, non_cross=0
         y_train = (train_df[target_col] == "cross").astype(int)
         y_val = (val_df[target_col] == "cross").astype(int)
-        X_train = train_df[feature_cols].values
-        X_val = val_df[feature_cols].values
+        
+        X_train = train_df[feature_cols].copy()
+        if "sport" in feature_cols:
+            X_train["sport"] = X_train["sport"].astype("category")
+        X_val = val_df[feature_cols].copy()
+        if "sport" in feature_cols:
+            X_val["sport"] = X_val["sport"].astype("category")
+
+        pos_count = y_train.sum()
+        neg_count = len(y_train) - pos_count
+        scale_pos = float(neg_count / max(1, pos_count))
 
         logger.info(
             f"Training regime classifier: {len(X_train)} train, {len(X_val)} val | "
@@ -70,14 +79,16 @@ class RegimeClassifier:
         )
 
         self.model = XGBClassifier(
-            n_estimators=200,
-            max_depth=6,
-            learning_rate=0.1,
+            n_estimators=100,
+            max_depth=3,
+            learning_rate=0.05,
             subsample=0.8,
             colsample_bytree=0.8,
             min_child_weight=5,
             reg_alpha=0.1,
             reg_lambda=1.0,
+            scale_pos_weight=scale_pos,
+            enable_categorical=True,
             objective="binary:logistic",
             eval_metric="logloss",
             use_label_encoder=False,
@@ -137,7 +148,11 @@ class RegimeClassifier:
             # Fallback: use heuristic
             return self._heuristic_predict(features)
 
-        X = features.to_array().reshape(1, -1)
+        df_feat = pd.DataFrame([features.to_dict()])
+        if "sport" in df_feat.columns:
+            df_feat["sport"] = df_feat["sport"].astype("category")
+        X = df_feat[self.feature_names]
+
         prob = float(self.model.predict_proba(X)[0, 1])
         regime = "cross" if prob >= 0.5 else "non_cross"
 
@@ -146,12 +161,12 @@ class RegimeClassifier:
     def _heuristic_predict(self, features: FeatureVector) -> dict:
         """Rule-based fallback when no model is loaded."""
         # Strong team has collapsed significantly
-        if features.s_value > 3.0 and features.prob_a_initial > 0.60:
-            return {"regime": "cross", "confidence": 0.60}
+        if features.s_value > 2.0 and features.prob_a_initial > 0.55:
+            return {"regime": "cross", "confidence": 0.55}
 
         # Weak team at extreme low
-        if features.op_value > 3.0 and features.prob_b_current < 0.10:
-            return {"regime": "non_cross", "confidence": 0.60}
+        if features.op_value > 2.0 and features.prob_b_current < 0.20:
+            return {"regime": "non_cross", "confidence": 0.55}
 
         return {"regime": "non_cross", "confidence": 0.50}
 

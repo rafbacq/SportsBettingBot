@@ -1,6 +1,7 @@
 """Portfolio management — position tracking and sizing.
 
 Tracks all open positions, computes P&L, and determines position sizes.
+Uses fractional Kelly Criterion for optimal bankroll-proportional sizing.
 """
 
 from __future__ import annotations
@@ -8,6 +9,8 @@ from __future__ import annotations
 import logging
 import uuid
 from typing import Optional
+
+import numpy as np
 
 from src.data.models import (
     ExitStrategy,
@@ -20,6 +23,86 @@ from src.data.models import (
 logger = logging.getLogger("trading.execution.portfolio")
 
 
+class KellyCriterionSizer:
+    """Fractional Kelly Criterion position sizer.
+
+    Full Kelly: f* = (p * (b + 1) - 1) / b
+      where p = probability of winning, b = net odds (payout ratio)
+
+    We apply a conservative fraction (default 0.25) of full Kelly to
+    reduce variance while maintaining positive edge growth.
+    """
+
+    def __init__(
+        self,
+        kelly_fraction: float = 0.25,
+        max_bet_fraction: float = 0.05,
+        min_bet_usd: float = 0.50,
+        bankroll_floor_fraction: float = 0.10,
+    ):
+        self.kelly_fraction = kelly_fraction  # fraction of full Kelly
+        self.max_bet_fraction = max_bet_fraction  # max fraction of bankroll per bet
+        self.min_bet_usd = min_bet_usd
+        self.bankroll_floor_fraction = bankroll_floor_fraction  # reserve ratio
+
+    def compute_stake(
+        self,
+        signal: TradeSignal,
+        bankroll: float,
+        max_stake: float,
+    ) -> float:
+        """Compute optimal stake using fractional Kelly Criterion.
+
+        Args:
+            signal: Trade signal with confidence (model probability) and
+                    exit_multiplier (potential payout ratio).
+            bankroll: Current available bankroll.
+            max_stake: Hard maximum stake limit.
+
+        Returns:
+            Optimal stake in USD.
+        """
+        # Edge estimation:
+        # p = model confidence (probability of a favorable outcome)
+        # b = expected payout ratio (exit_multiplier - 1 for net odds)
+        p = float(np.clip(signal.confidence, 0.01, 0.99))
+        b = max(signal.exit_multiplier - 1.0, 0.01)  # net odds
+
+        # Full Kelly fraction: f* = (p*(b+1) - 1) / b
+        full_kelly = (p * (b + 1.0) - 1.0) / b
+
+        # If Kelly is negative, the edge is negative — don't bet
+        if full_kelly <= 0:
+            logger.debug(
+                f"Kelly negative ({full_kelly:.4f}), no edge | "
+                f"p={p:.3f}, b={b:.2f}"
+            )
+            return self.min_bet_usd * 0.5  # minimum table stake
+
+        # Apply fraction of Kelly
+        fractional_kelly = full_kelly * self.kelly_fraction
+
+        # Ensure bankroll floor is respected
+        available_bankroll = bankroll * (1.0 - self.bankroll_floor_fraction)
+        if available_bankroll <= 0:
+            return self.min_bet_usd
+
+        # Cap at max fraction of bankroll
+        max_from_bankroll = available_bankroll * self.max_bet_fraction
+        stake = min(fractional_kelly * available_bankroll, max_from_bankroll)
+
+        # Apply hard limits
+        stake = max(stake, self.min_bet_usd)
+        stake = min(stake, max_stake)
+
+        logger.debug(
+            f"Kelly sizing: f*={full_kelly:.4f} | "
+            f"fractional={fractional_kelly:.4f} | "
+            f"stake=${stake:.2f} (bankroll=${bankroll:.2f})"
+        )
+        return round(stake, 2)
+
+
 class PortfolioManager:
     """Manages open positions and handles sizing."""
 
@@ -28,6 +111,23 @@ class PortfolioManager:
         self.default_stake = trading_cfg.get("default_stake_usd", 1.00)
         self.max_stake = trading_cfg.get("max_stake_usd", 10.00)
         self.positions: dict[str, TradeRecord] = {}   # trade_id → TradeRecord
+
+        # Bankroll tracking
+        self.initial_bankroll = trading_cfg.get("initial_bankroll_usd", 100.00)
+        self.bankroll = self.initial_bankroll
+
+        # Kelly sizer
+        kelly_cfg = config.get("kelly", {})
+        self.kelly_sizer = KellyCriterionSizer(
+            kelly_fraction=kelly_cfg.get("fraction", 0.25),
+            max_bet_fraction=kelly_cfg.get("max_bet_fraction", 0.05),
+            min_bet_usd=kelly_cfg.get("min_bet_usd", 0.50),
+            bankroll_floor_fraction=kelly_cfg.get("bankroll_floor_fraction", 0.10),
+        )
+        self.use_kelly = kelly_cfg.get("enabled", True)
+
+        # Trade history for analytics
+        self.closed_trades: list[TradeRecord] = []
 
     def open_position(self, signal: TradeSignal, stake: float | None = None) -> TradeRecord:
         """Create a new open position from a trade signal."""
@@ -49,9 +149,12 @@ class PortfolioManager:
         )
 
         self.positions[trade_id] = trade
+        self.bankroll -= stake  # deduct from bankroll
+
         logger.info(
             f"OPENED position {trade_id}: {signal.regime.value} | "
-            f"entry={signal.entry_prob:.3f} | stake=${stake:.2f}"
+            f"entry={signal.entry_prob:.3f} | stake=${stake:.2f} | "
+            f"bankroll=${self.bankroll:.2f}"
         )
         return trade
 
@@ -77,19 +180,29 @@ class PortfolioManager:
         contracts = trade.stake_usd / (trade.entry_prob)
         trade.pnl_usd = contracts * (exit_prob - trade.entry_prob)
 
+        # Update bankroll
+        self.bankroll += trade.stake_usd + trade.pnl_usd
+
         logger.info(
             f"CLOSED position {trade_id}: "
             f"entry={trade.entry_prob:.3f} → exit={exit_prob:.3f} | "
             f"mult={trade.multiplier_achieved:.1f}x | "
-            f"P&L=${trade.pnl_usd:.2f}"
+            f"P&L=${trade.pnl_usd:.2f} | bankroll=${self.bankroll:.2f}"
         )
 
+        # Archive the trade
+        self.closed_trades.append(trade)
         del self.positions[trade_id]
         return trade
 
     def _compute_stake(self, signal: TradeSignal) -> float:
-        """Determine position size based on signal confidence."""
-        # Simple scaling: base stake * confidence, capped
+        """Determine position size using Kelly Criterion or fallback."""
+        if self.use_kelly:
+            return self.kelly_sizer.compute_stake(
+                signal, self.bankroll, self.max_stake
+            )
+
+        # Fallback: simple scaling
         stake = self.default_stake * signal.confidence
         return min(max(stake, self.default_stake * 0.5), self.max_stake)
 
@@ -101,6 +214,13 @@ class PortfolioManager:
     def total_exposure(self) -> float:
         return sum(t.stake_usd for t in self.positions.values())
 
+    @property
+    def total_return_pct(self) -> float:
+        """Total return as percentage of initial bankroll."""
+        if self.initial_bankroll <= 0:
+            return 0.0
+        return ((self.bankroll - self.initial_bankroll) / self.initial_bankroll) * 100
+
     def get_position_for_game(self, game_id: str) -> TradeRecord | None:
         for t in self.positions.values():
             if t.game_id == game_id:
@@ -109,12 +229,15 @@ class PortfolioManager:
 
     def summary(self) -> str:
         if not self.positions:
-            return "No open positions"
+            return f"No open positions | Bankroll: ${self.bankroll:.2f} ({self.total_return_pct:+.1f}%)"
         lines = [f"Open positions ({len(self.positions)}):"]
         for tid, t in self.positions.items():
             lines.append(
                 f"  {tid} | {t.regime.value:10s} | game={t.game_id} | "
                 f"entry={t.entry_prob:.3f} | stake=${t.stake_usd:.2f}"
             )
-        lines.append(f"Total exposure: ${self.total_exposure:.2f}")
+        lines.append(
+            f"Total exposure: ${self.total_exposure:.2f} | "
+            f"Bankroll: ${self.bankroll:.2f} ({self.total_return_pct:+.1f}%)"
+        )
         return "\n".join(lines)

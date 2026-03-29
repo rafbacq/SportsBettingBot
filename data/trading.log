@@ -619,3 +619,220 @@ Likely causes:
 
 Error message(s): ["dlopen(/Users/student/Library/Python/3.9/lib/python/site-packages/xgboost/lib/libxgboost.dylib, 0x0006): Library not loaded: @rpath/libomp.dylib\n  Referenced from: <89AD948E-E564-3266-867D-7AF89D6488F0> /Users/student/Library/Python/3.9/lib/python/site-packages/xgboost/lib/libxgboost.dylib\n  Reason: tried: '/opt/homebrew/opt/libomp/lib/libomp.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/libomp/lib/libomp.dylib' (no such file), '/opt/homebrew/opt/libomp/lib/libomp.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/libomp/lib/libomp.dylib' (no such file)"]
 
+2026-03-24 17:46:17 | INFO     | trading.trainer           | ============================================================
+2026-03-24 17:46:17 | INFO     | trading.trainer           | STARTING ML TRAINING PIPELINE
+2026-03-24 17:46:17 | INFO     | trading.trainer           | ============================================================
+2026-03-24 17:46:17 | INFO     | trading.trainer           | Loading historical data from data/...
+2026-03-24 17:46:17 | INFO     | trading.csv_loader        | Loading 1 CSV files from data/
+2026-03-24 17:46:17 | INFO     | trading.csv_loader        | Loaded 19486 total rows across 821 games
+2026-03-24 17:46:18 | INFO     | trading.csv_loader        | Created 821 GameState objects
+2026-03-24 17:46:18 | INFO     | trading.trainer           | Processing 821 games...
+2026-03-24 17:52:57 | INFO     | trading.dataset           | Built dataset: 753 samples from 821 games | rebounds: 574 (76.2%)
+2026-03-24 17:52:57 | INFO     | trading.dataset           | Split: train=543 (125 games), val=86 (27 games), test=124 (28 games)
+2026-03-24 17:52:57 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-24 17:52:57 | INFO     | trading.trainer           | Training Regime Classifier...
+2026-03-24 17:52:57 | INFO     | trading.regime_classifier | Regime classifier loaded from src/ml/models\regime_classifier.joblib
+2026-03-24 17:52:57 | INFO     | trading.regime_classifier | Training regime classifier: 543 train, 86 val | Cross rate: 91.2% (train), 72.1% (val)
+2026-03-24 17:52:57 | INFO     | trading.regime_classifier | Regime classifier results: accuracy=0.721, precision=0.721, recall=1.000, f1=0.838
+2026-03-24 17:52:57 | INFO     | trading.regime_classifier | Top features: op_value=0.361, s_value=0.245, prob_change_abs=0.239, momentum_20=0.079, volatility_5=0.051
+2026-03-24 17:52:57 | INFO     | trading.regime_classifier | Regime classifier saved to src/ml/models\regime_classifier.joblib
+2026-03-24 17:52:57 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-24 17:52:57 | INFO     | trading.trainer           | Training Non-Cross Parameter Optimizer...
+2026-03-24 17:52:57 | INFO     | trading.param_optimizer   | Non-Cross model loaded from src/ml/models\non_cross_params.joblib
+2026-03-24 17:52:57 | INFO     | trading.param_optimizer   | Non-Cross rebound accuracy: 1.000
+2026-03-24 17:52:57 | INFO     | trading.param_optimizer   | Non-Cross multiplier RMSE: 0.041
+2026-03-24 17:52:57 | INFO     | trading.param_optimizer   | Non-Cross model saved to src/ml/models\non_cross_params.joblib
+2026-03-24 17:52:57 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-24 17:52:57 | INFO     | trading.trainer           | Training Cross Parameter Optimizer...
+2026-03-24 17:52:57 | INFO     | trading.param_optimizer   | Cross model loaded from src/ml/models\cross_params.joblib
+2026-03-24 17:52:57 | INFO     | trading.param_optimizer   | Cross recovery accuracy: 0.774
+2026-03-24 17:52:57 | INFO     | trading.param_optimizer   | Cross multiplier RMSE: 9.627
+2026-03-24 17:52:57 | INFO     | trading.param_optimizer   | Cross model saved to src/ml/models\cross_params.joblib
+2026-03-24 17:52:57 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-24 17:52:57 | INFO     | trading.trainer           | Evaluating on test set...
+2026-03-24 17:54:15 | INFO     | trading.trainer           | ============================================================
+2026-03-24 17:54:15 | INFO     | trading.trainer           | STARTING ML TRAINING PIPELINE
+2026-03-24 17:54:15 | INFO     | trading.trainer           | ============================================================
+2026-03-24 17:54:15 | INFO     | trading.trainer           | Loading historical data from data/...
+2026-03-24 17:54:15 | INFO     | trading.csv_loader        | Loading 1 CSV files from data/
+2026-03-24 17:54:15 | INFO     | trading.csv_loader        | Loaded 19486 total rows across 821 games
+2026-03-24 17:54:16 | INFO     | trading.csv_loader        | Created 821 GameState objects
+2026-03-24 17:54:16 | INFO     | trading.trainer           | Processing 821 games...
+2026-03-24 18:00:42 | INFO     | trading.dataset           | Built dataset: 753 samples from 821 games | rebounds: 574 (76.2%)
+2026-03-24 18:00:42 | INFO     | trading.dataset           | Split: train=543 (125 games), val=86 (27 games), test=124 (28 games)
+2026-03-24 18:00:42 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-24 18:00:42 | INFO     | trading.trainer           | Training Regime Classifier...
+2026-03-24 18:00:42 | INFO     | trading.regime_classifier | Regime classifier loaded from src/ml/models\regime_classifier.joblib
+2026-03-24 18:00:42 | INFO     | trading.regime_classifier | Training regime classifier: 543 train, 86 val | Cross rate: 91.2% (train), 72.1% (val)
+2026-03-24 18:00:42 | INFO     | trading.regime_classifier | Regime classifier results: accuracy=0.721, precision=0.721, recall=1.000, f1=0.838
+2026-03-24 18:00:42 | INFO     | trading.regime_classifier | Top features: op_value=0.361, s_value=0.245, prob_change_abs=0.239, momentum_20=0.079, volatility_5=0.051
+2026-03-24 18:00:42 | INFO     | trading.regime_classifier | Regime classifier saved to src/ml/models\regime_classifier.joblib
+2026-03-24 18:00:42 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-24 18:00:42 | INFO     | trading.trainer           | Training Non-Cross Parameter Optimizer...
+2026-03-24 18:00:42 | INFO     | trading.param_optimizer   | Non-Cross model loaded from src/ml/models\non_cross_params.joblib
+2026-03-24 18:00:43 | INFO     | trading.param_optimizer   | Non-Cross rebound accuracy: 1.000
+2026-03-24 18:00:43 | INFO     | trading.param_optimizer   | Non-Cross multiplier RMSE: 0.041
+2026-03-24 18:00:43 | INFO     | trading.param_optimizer   | Non-Cross model saved to src/ml/models\non_cross_params.joblib
+2026-03-24 18:00:43 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-24 18:00:43 | INFO     | trading.trainer           | Training Cross Parameter Optimizer...
+2026-03-24 18:00:43 | INFO     | trading.param_optimizer   | Cross model loaded from src/ml/models\cross_params.joblib
+2026-03-24 18:00:43 | INFO     | trading.param_optimizer   | Cross recovery accuracy: 0.758
+2026-03-24 18:00:43 | INFO     | trading.param_optimizer   | Cross multiplier RMSE: 9.639
+2026-03-24 18:00:43 | INFO     | trading.param_optimizer   | Cross model saved to src/ml/models\cross_params.joblib
+2026-03-24 18:00:43 | INFO     | trading.trainer           | ----------------------------------------
+2026-03-24 18:00:43 | INFO     | trading.trainer           | Evaluating on test set...
+2026-03-24 18:00:43 | INFO     | trading.trainer           | Test set: regime_accuracy=0.855, avg_EV=5.160
+2026-03-24 18:00:43 | INFO     | trading.trainer           | ============================================================
+2026-03-24 18:00:43 | INFO     | trading.trainer           | TRAINING COMPLETE in 387.3s
+2026-03-24 18:00:43 | INFO     | trading.trainer           | ============================================================
+2026-03-24 18:00:43 | INFO     | trading.storage           | Database initialized at data/trading.db
+2026-03-24 18:00:43 | INFO     | trading.storage           | Database connection closed
+2026-03-24 18:01:51 | INFO     | trading.csv_loader        | Loading 1 CSV files from data/
+2026-03-24 18:01:51 | INFO     | trading.csv_loader        | Loaded 19486 total rows across 821 games
+2026-03-24 18:01:51 | INFO     | trading.csv_loader        | Created 821 GameState objects
+2026-03-24 18:01:52 | INFO     | trading.regime_classifier | Regime classifier loaded from src/ml/models\regime_classifier.joblib
+2026-03-24 18:01:52 | INFO     | trading.param_optimizer   | Non-Cross model loaded from src/ml/models\non_cross_params.joblib
+2026-03-24 18:01:52 | INFO     | trading.param_optimizer   | Cross model loaded from src/ml/models\cross_params.joblib
+2026-03-24 18:01:52 | INFO     | trading.strategy.router   | All ML models loaded
+2026-03-24 18:02:25 | INFO     | trading.csv_loader        | Loading 1 CSV files from data/
+2026-03-24 18:02:25 | INFO     | trading.csv_loader        | Loaded 19486 total rows across 821 games
+2026-03-24 18:02:26 | INFO     | trading.csv_loader        | Created 821 GameState objects
+2026-03-24 18:02:26 | INFO     | trading.regime_classifier | Regime classifier loaded from src/ml/models\regime_classifier.joblib
+2026-03-24 18:02:26 | INFO     | trading.param_optimizer   | Non-Cross model loaded from src/ml/models\non_cross_params.joblib
+2026-03-24 18:02:26 | INFO     | trading.param_optimizer   | Cross model loaded from src/ml/models\cross_params.joblib
+2026-03-24 18:02:26 | INFO     | trading.strategy.router   | All ML models loaded
+2026-03-24 18:04:08 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.050 < 0.065
+2026-03-24 18:04:58 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.700
+2026-03-24 18:05:22 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.250
+2026-03-24 18:05:32 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.130
+2026-03-24 18:05:34 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.040 < 0.110
+2026-03-24 18:05:39 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.110
+2026-03-24 18:05:42 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.055
+2026-03-24 18:05:54 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.075
+2026-03-24 18:05:57 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:05:57 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:05:59 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.300
+2026-03-24 18:05:59 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:06:02 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.055
+2026-03-24 18:06:09 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.090 < 0.140
+2026-03-24 18:06:12 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:06:12 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.025
+2026-03-24 18:06:17 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:06:19 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.500
+2026-03-24 18:06:19 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.300
+2026-03-24 18:06:24 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:06:25 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.250
+2026-03-24 18:07:00 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:07:00 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.250
+2026-03-24 18:07:00 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.790 >= 0.300
+2026-03-24 18:07:00 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.300 >= 0.250
+2026-03-24 18:08:27 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.500
+2026-03-24 18:08:35 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.300
+2026-03-24 18:08:35 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.351
+2026-03-24 18:08:35 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.351
+2026-03-24 18:09:20 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.050 < 0.060
+2026-03-24 18:09:36 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.950 >= 0.600
+2026-03-24 18:09:43 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.500
+2026-03-24 18:09:43 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:09:43 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.500
+2026-03-24 18:09:43 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.500
+2026-03-24 18:10:02 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.500
+2026-03-24 18:10:05 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.400
+2026-03-24 18:10:05 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.400
+2026-03-24 18:10:21 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:10:21 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:10:49 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:10:54 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:10:54 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:10:54 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.600
+2026-03-24 18:10:59 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:11:04 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:11:52 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:11:54 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:12:05 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.230 < 0.250
+2026-03-24 18:12:14 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:12:22 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.060
+2026-03-24 18:12:40 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:12:51 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:12:51 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:12:59 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.100
+2026-03-24 18:13:15 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.060 < 0.090
+2026-03-24 18:13:16 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:13:18 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.090 < 0.125
+2026-03-24 18:13:22 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.130
+2026-03-24 18:13:24 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:13:55 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.500
+2026-03-24 18:14:03 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:14:10 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.700
+2026-03-24 18:14:23 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.800
+2026-03-24 18:14:28 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:14:30 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.400
+2026-03-24 18:14:31 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:14:43 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:15:05 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.040 < 0.110
+2026-03-24 18:15:09 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.400
+2026-03-24 18:15:14 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.300
+2026-03-24 18:15:14 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.301
+2026-03-24 18:15:14 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.301
+2026-03-24 18:15:50 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:15:50 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:15:53 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.750
+2026-03-24 18:16:23 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:16:23 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.300
+2026-03-24 18:16:34 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.040 < 0.075
+2026-03-24 18:16:53 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.070 < 0.120
+2026-03-24 18:16:55 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:16:55 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.040
+2026-03-24 18:17:31 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.090
+2026-03-24 18:17:34 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.400
+2026-03-24 18:17:39 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:17:53 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.400
+2026-03-24 18:17:58 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:17:58 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.300
+2026-03-24 18:18:56 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.450
+2026-03-24 18:19:06 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.400
+2026-03-24 18:19:06 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:19:06 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.390 >= 0.250
+2026-03-24 18:19:09 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:19:17 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.400
+2026-03-24 18:19:35 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:19:48 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:19:58 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.890 >= 0.650
+2026-03-24 18:20:01 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:20:26 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.250
+2026-03-24 18:20:36 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.075
+2026-03-24 18:20:38 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.055
+2026-03-24 18:20:43 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.030 < 0.125
+2026-03-24 18:20:46 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.030 < 0.100
+2026-03-24 18:20:48 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.020 < 0.080
+2026-03-24 18:20:50 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.055
+2026-03-24 18:20:58 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.060 < 0.140
+2026-03-24 18:21:00 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:21:03 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.850
+2026-03-24 18:21:05 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.250
+2026-03-24 18:21:14 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.030 < 0.120
+2026-03-24 18:21:17 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.230 < 0.250
+2026-03-24 18:21:20 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.020 < 0.085
+2026-03-24 18:21:23 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:21:48 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.700 >= 0.600
+2026-03-24 18:21:56 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.055
+2026-03-24 18:22:03 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.145
+2026-03-24 18:22:06 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.120
+2026-03-24 18:22:09 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.090
+2026-03-24 18:22:11 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.500
+2026-03-24 18:22:11 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.060 < 0.065
+2026-03-24 18:22:11 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.301
+2026-03-24 18:22:21 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.350
+2026-03-24 18:22:21 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.500 >= 0.400
+2026-03-24 18:22:21 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.065
+2026-03-24 18:22:42 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:27:12 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.850
+2026-03-24 18:27:54 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.760 >= 0.650
+2026-03-24 18:27:57 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.060 < 0.075
+2026-03-24 18:28:23 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.990 >= 0.990
+2026-03-24 18:28:25 | INFO     | trading.strategy.cross    | CROSS EXIT (multiplier): prob=0.810 >= 0.750
+2026-03-24 18:28:43 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.050 < 0.130
+2026-03-24 18:29:04 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.060 < 0.105
+2026-03-24 18:29:04 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.125
+2026-03-24 18:29:05 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.080 < 0.115
+2026-03-24 18:29:08 | INFO     | trading.strategy.cross    | CROSS EXIT (stop-loss): prob=0.010 < 0.110

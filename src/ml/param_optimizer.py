@@ -47,14 +47,21 @@ class NonCrossParamOptimizer:
             return {"status": "skipped"}
         if feature_cols is None:
             feature_cols = [c for c in self.feature_names if c in train.columns]
-        X_train, X_val = train[feature_cols].values, val[feature_cols].values
+        X_train, X_val = train[feature_cols].copy(), val[feature_cols].copy()
+        if "sport" in feature_cols:
+            X_train["sport"] = X_train["sport"].astype("category")
+            X_val["sport"] = X_val["sport"].astype("category")
 
         # Rebound probability model
         y_rb_tr = train["did_rebound"].astype(int).values
         y_rb_va = val["did_rebound"].astype(int).values
+        pos_count = y_rb_tr.sum()
+        scale_pos = float((len(y_rb_tr) - pos_count) / max(1, pos_count))
+
         self.rebound_model = XGBClassifier(
-            n_estimators=150, max_depth=5, learning_rate=0.1,
+            n_estimators=100, max_depth=3, learning_rate=0.05,
             subsample=0.8, colsample_bytree=0.8, min_child_weight=5,
+            scale_pos_weight=scale_pos, enable_categorical=True,
             objective="binary:logistic", eval_metric="logloss",
             use_label_encoder=False, random_state=42, n_jobs=-1)
         self.rebound_model.fit(X_train, y_rb_tr, eval_set=[(X_val, y_rb_va)], verbose=False)
@@ -65,8 +72,9 @@ class NonCrossParamOptimizer:
         y_m_tr = np.clip(train["max_rebound_multiplier"].values, 0, 50)
         y_m_va = np.clip(val["max_rebound_multiplier"].values, 0, 50)
         self.multiplier_model = XGBRegressor(
-            n_estimators=150, max_depth=5, learning_rate=0.1,
+            n_estimators=100, max_depth=3, learning_rate=0.05,
             subsample=0.8, colsample_bytree=0.8, min_child_weight=5,
+            enable_categorical=True,
             objective="reg:squaredlogerror", random_state=42, n_jobs=-1)
         self.multiplier_model.fit(X_train, y_m_tr, eval_set=[(X_val, y_m_va)], verbose=False)
         m_pred = self.multiplier_model.predict(X_val)
@@ -87,7 +95,10 @@ class NonCrossParamOptimizer:
     def predict_params(self, features: FeatureVector) -> NonCrossParams:
         if self.rebound_model is None:
             return NonCrossParams()
-        X = features.to_array().reshape(1, -1)
+        df_feat = pd.DataFrame([features.to_dict()])
+        if "sport" in df_feat.columns:
+            df_feat["sport"] = df_feat["sport"].astype("category")
+        X = df_feat[self.feature_names]
         est_m = float(self.multiplier_model.predict(X)[0])
         return NonCrossParams(
             entry_prob_low=self._optimal_entry_low,
@@ -99,7 +110,10 @@ class NonCrossParamOptimizer:
     def predict_ev(self, features: FeatureVector) -> float:
         if self.rebound_model is None:
             return 0.0
-        X = features.to_array().reshape(1, -1)
+        df_feat = pd.DataFrame([features.to_dict()])
+        if "sport" in df_feat.columns:
+            df_feat["sport"] = df_feat["sport"].astype("category")
+        X = df_feat[self.feature_names]
         p = float(self.rebound_model.predict_proba(X)[0, 1])
         m = float(self.multiplier_model.predict(X)[0])
         return p * m - 1.0
@@ -161,14 +175,21 @@ class CrossParamOptimizer:
             return {"status": "skipped"}
         if feature_cols is None:
             feature_cols = [c for c in self.feature_names if c in train.columns]
-        X_train, X_val = train[feature_cols].values, val[feature_cols].values
+        X_train, X_val = train[feature_cols].copy(), val[feature_cols].copy()
+        if "sport" in feature_cols:
+            X_train["sport"] = X_train["sport"].astype("category")
+            X_val["sport"] = X_val["sport"].astype("category")
 
         # Recovery classifier
         y_rb_tr = train["did_rebound"].astype(int).values
         y_rb_va = val["did_rebound"].astype(int).values
+        pos_count = y_rb_tr.sum()
+        scale_pos = float((len(y_rb_tr) - pos_count) / max(1, pos_count))
+
         self.rebound_model = XGBClassifier(
-            n_estimators=150, max_depth=5, learning_rate=0.1,
+            n_estimators=100, max_depth=3, learning_rate=0.05,
             subsample=0.8, colsample_bytree=0.8, min_child_weight=5,
+            scale_pos_weight=scale_pos, enable_categorical=True,
             objective="binary:logistic", eval_metric="logloss",
             use_label_encoder=False, random_state=42, n_jobs=-1)
         self.rebound_model.fit(X_train, y_rb_tr, eval_set=[(X_val, y_rb_va)], verbose=False)
@@ -179,8 +200,9 @@ class CrossParamOptimizer:
         y_m_tr = np.clip(train["max_rebound_multiplier"].values, 0, 50)
         y_m_va = np.clip(val["max_rebound_multiplier"].values, 0, 50)
         self.multiplier_model = XGBRegressor(
-            n_estimators=150, max_depth=5, learning_rate=0.1,
+            n_estimators=100, max_depth=3, learning_rate=0.05,
             subsample=0.8, colsample_bytree=0.8, min_child_weight=5,
+            enable_categorical=True,
             objective="reg:squaredlogerror", random_state=42, n_jobs=-1)
         self.multiplier_model.fit(X_train, y_m_tr, eval_set=[(X_val, y_m_va)], verbose=False)
         m_rmse = float(np.sqrt(mean_squared_error(
@@ -192,8 +214,9 @@ class CrossParamOptimizer:
         val["best_exit"] = val.apply(self._label_exit, axis=1)
         smap = {"full_hold": 0, "multiplier": 1, "dynamic": 2}
         self.strategy_model = XGBClassifier(
-            n_estimators=100, max_depth=4, learning_rate=0.1,
+            n_estimators=80, max_depth=3, learning_rate=0.05,
             objective="multi:softmax", num_class=3, eval_metric="mlogloss",
+            enable_categorical=True,
             use_label_encoder=False, random_state=42, n_jobs=-1)
         self.strategy_model.fit(
             X_train, train["best_exit"].map(smap).values,
@@ -226,7 +249,10 @@ class CrossParamOptimizer:
     def predict_params(self, features: FeatureVector) -> CrossParams:
         if self.rebound_model is None:
             return CrossParams()
-        X = features.to_array().reshape(1, -1)
+        df_feat = pd.DataFrame([features.to_dict()])
+        if "sport" in df_feat.columns:
+            df_feat["sport"] = df_feat["sport"].astype("category")
+        X = df_feat[self.feature_names]
         est_m = float(self.multiplier_model.predict(X)[0])
         smap_inv = {0: ExitStrategy.FULL_HOLD, 1: ExitStrategy.MULTIPLIER, 2: ExitStrategy.DYNAMIC}
         strat = ExitStrategy.MULTIPLIER
@@ -245,7 +271,10 @@ class CrossParamOptimizer:
     def predict_ev(self, features: FeatureVector) -> float:
         if self.rebound_model is None:
             return 0.0
-        X = features.to_array().reshape(1, -1)
+        df_feat = pd.DataFrame([features.to_dict()])
+        if "sport" in df_feat.columns:
+            df_feat["sport"] = df_feat["sport"].astype("category")
+        X = df_feat[self.feature_names]
         p = float(self.rebound_model.predict_proba(X)[0, 1])
         m = float(self.multiplier_model.predict(X)[0])
         return p * m - 1.0
